@@ -1,0 +1,19 @@
+# Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE & OS Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Exclude raw image dataset (70,000+ files / 828MB) to keep repo size clean; CSV datasets are tracked in datasets/
+images/
