@@ -199,6 +199,7 @@ def main():
 
     send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    recv_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     recv_sock.bind((HOST, PORT))
     recv_sock.settimeout(0.01)
 
