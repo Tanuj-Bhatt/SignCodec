@@ -1,3 +1,14 @@
+---
+title: SignCodec - Semantic Sign Language Codec
+emoji: 🤟
+colorFrom: blue
+colorTo: indigo
+sdk: gradio
+app_file: app.py
+pinned: false
+license: mit
+---
+
 # SignCodec: Ultra-Low Bandwidth Semantic Communication for Sign Language
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
@@ -84,6 +95,7 @@ Measured using `measure_compression.py` on a standard 640×480 video frame:
 
 ```
 sign-codec/
+├── app.py                      # Hugging Face Spaces Gradio interactive web application
 ├── cam_test.py                 # Quick webcam verification script
 ├── confusion_analysis.py       # Computes confusion matrix & error breakdown on test set
 ├── confusion_matrix.png        # Generated 36x36 ASL confusion matrix heatmap (98.8% accuracy)
@@ -96,6 +108,7 @@ sign-codec/
 ├── measure_compression.py      # Empirical benchmark comparing raw, JPEG, PNG, and SignCodec
 ├── model_asl.keras             # Trained Keras model for ASL alphabet & digits
 ├── model_isl.keras             # Trained Keras model for ISL (INCLUDE-50)
+├── packages.txt                # Linux apt dependencies for Hugging Face Spaces (libgl1)
 ├── process_asl_images.py       # Converts image datasets into 63-feature landmark CSVs
 ├── process_include_videos.py   # Samples video frames and extracts landmarks for INCLUDE
 ├── receiver.py                 # Standalone UDP receiver & live sign classification display
@@ -152,9 +165,20 @@ python cam_test.py
 
 ## Running the Applications
 
-### Mode A: Fullscreen Live Demo (All-In-One)
+### Mode A: Browser Interactive Web Demo (Gradio / Hugging Face)
 
-The most complete demonstration of the system. Runs the webcam capture, edge landmark extraction, local loopback UDP socket transmission, neural network classifier, stability filter, and live SMS encoding in a single split-screen window:
+Run the full interactive web application in your browser (supports live webcam streaming with split-screen semantic decoding matching `demo_ui.py`):
+
+```bash
+python app.py
+```
+Then navigate to `http://localhost:7860` in your web browser.
+
+---
+
+### Mode B: Fullscreen Desktop Demo (OpenCV Native)
+
+The native desktop demonstration of the system. Runs the webcam capture, edge landmark extraction, local loopback UDP socket transmission, neural network classifier, stability filter, and live SMS encoding in a single split-screen window:
 
 ```bash
 python demo_ui.py
@@ -166,7 +190,7 @@ python demo_ui.py
 
 ---
 
-### Mode B: Distributed Network Transmission (Sender & Receiver)
+### Mode C: Distributed Network Transmission (Sender & Receiver)
 
 Simulate two separate machines or processes communicating across a local network or the internet.
 
@@ -183,7 +207,7 @@ The sender captures camera frames at 5 Hz, extracts landmarks, packs 63 floats i
 
 ---
 
-### Mode C: SMS Fallback Protocol (Zero-Internet Channel)
+### Mode D: SMS Fallback Protocol (Zero-Internet Channel)
 
 Simulate or execute transmission over cellular text messages:
 
@@ -212,7 +236,7 @@ python sms_encode.py --mode send --phone 9876543210
 
 ---
 
-### Mode D: Empirical Compression Measurement
+### Mode E: Empirical Compression Measurement
 
 To generate a benchmark comparison on your hardware:
 
