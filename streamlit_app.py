@@ -219,28 +219,45 @@ with tab1:
     st.write("Click **START** below to stream your webcam directly through WebRTC:")
     try:
         import av
-        from streamlit_webrtc import webrtc_streamer, VideoProcessorBase
+        from streamlit_webrtc import webrtc_streamer
 
-        class WebRTCProcessor(VideoProcessorBase):
-            def __init__(self):
-                self.state = {
-                    "packets_sent": 0,
-                    "bytes_sent": 0,
-                    "decoded_label": None,
-                    "confidence": 0.0,
-                    "recent_predictions": deque(maxlen=STABILITY_WINDOW),
-                }
+        # Comprehensive STUN + TURN relay servers to bypass symmetric cloud NAT/firewalls
+        RTC_CONFIGURATION = {
+            "iceServers": [
+                {"urls": ["stun:stun.l.google.com:19302"]},
+                {"urls": ["stun:stun1.l.google.com:19302"]},
+                {"urls": ["stun:openrelay.metered.ca:80"]},
+                {
+                    "urls": [
+                        "turn:openrelay.metered.ca:80",
+                        "turn:openrelay.metered.ca:443",
+                        "turn:openrelay.metered.ca:443?transport=tcp",
+                    ],
+                    "username": "openrelayproject",
+                    "credential": "openrelayproject",
+                },
+            ]
+        }
 
-            def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
-                img = frame.to_ndarray(format="bgr24")
-                combined = process_frame(img, self.state)
-                return av.VideoFrame.from_ndarray(combined, format="bgr24")
+        stream_state = {
+            "packets_sent": 0,
+            "bytes_sent": 0,
+            "decoded_label": None,
+            "confidence": 0.0,
+            "recent_predictions": deque(maxlen=STABILITY_WINDOW),
+        }
+
+        def video_frame_callback(frame: av.VideoFrame) -> av.VideoFrame:
+            img = frame.to_ndarray(format="bgr24")
+            combined = process_frame(img, stream_state)
+            return av.VideoFrame.from_ndarray(combined, format="bgr24")
 
         webrtc_streamer(
             key="signcodec-stream",
-            video_processor_factory=WebRTCProcessor,
-            rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
+            video_frame_callback=video_frame_callback,
+            rtc_configuration=RTC_CONFIGURATION,
             media_stream_constraints={"video": True, "audio": False},
+            async_processing=True,
         )
     except Exception as e:
         st.warning(f"WebRTC module notice: {e}. You can also use the Snapshot Camera in Tab 2.")
