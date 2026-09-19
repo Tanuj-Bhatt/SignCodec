@@ -213,15 +213,40 @@ def process_frame(frame, state):
 st.title("🤟 SignCodec: Live ASL Semantic Codec")
 st.caption("Transmitting Sign Language over 252-Byte UDP Packets and 126-Byte Offline SMS | 98.8% ASL Accuracy")
 
-tab1, tab2 = st.tabs(["📹 Live WebRTC Stream", "📸 Snapshot Camera / Upload"])
+tab1, tab2 = st.tabs(["📸 Browser Camera (Instant & 100% Reliable)", "📹 WebRTC Stream (Experimental)"])
 
 with tab1:
-    st.write("Click **START** below to stream your webcam directly through WebRTC:")
+    st.write("Your browser's native camera opens directly below without any network or firewall blocks:")
+    col_cam, col_upload = st.columns(2)
+    with col_cam:
+        photo = st.camera_input("Hold up an ASL sign to your camera")
+    with col_upload:
+        uploaded_file = st.file_uploader("Or upload an image file", type=["jpg", "jpeg", "png"])
+
+    img_source = photo or uploaded_file
+    if img_source is not None:
+        file_bytes = np.asarray(bytearray(img_source.read()), dtype=np.uint8)
+        img_bgr = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+
+        static_state = {
+            "packets_sent": 1,
+            "bytes_sent": PACKET_SIZE,
+            "decoded_label": None,
+            "confidence": 0.0,
+            "recent_predictions": deque(maxlen=STABILITY_WINDOW),
+        }
+        for _ in range(STABILITY_WINDOW):
+            result_canvas = process_frame(img_bgr, static_state)
+
+        result_rgb = cv2.cvtColor(result_canvas, cv2.COLOR_BGR2RGB)
+        st.image(result_rgb, caption="SignCodec Semantic Split-Screen Output", use_container_width=True)
+
+with tab2:
+    st.write("Continuous WebRTC stream (Note: Some cloud firewalls or residential routers may block WebRTC UDP traffic):")
     try:
         import av
         from streamlit_webrtc import webrtc_streamer
 
-        # Comprehensive STUN + TURN relay servers to bypass symmetric cloud NAT/firewalls
         RTC_CONFIGURATION = {
             "iceServers": [
                 {"urls": ["stun:stun.l.google.com:19302"]},
@@ -260,33 +285,7 @@ with tab1:
             async_processing=True,
         )
     except Exception as e:
-        st.warning(f"WebRTC module notice: {e}. You can also use the Snapshot Camera in Tab 2.")
-
-with tab2:
-    st.write("Take a snapshot of an ASL sign or upload a photo:")
-    col_cam, col_upload = st.columns(2)
-    with col_cam:
-        photo = st.camera_input("Take a photo of a hand sign")
-    with col_upload:
-        uploaded_file = st.file_uploader("Or upload an image file", type=["jpg", "jpeg", "png"])
-
-    img_source = photo or uploaded_file
-    if img_source is not None:
-        file_bytes = np.asarray(bytearray(img_source.read()), dtype=np.uint8)
-        img_bgr = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
-
-        static_state = {
-            "packets_sent": 1,
-            "bytes_sent": PACKET_SIZE,
-            "decoded_label": None,
-            "confidence": 0.0,
-            "recent_predictions": deque(maxlen=STABILITY_WINDOW),
-        }
-        for _ in range(STABILITY_WINDOW):
-            result_canvas = process_frame(img_bgr, static_state)
-
-        result_rgb = cv2.cvtColor(result_canvas, cv2.COLOR_BGR2RGB)
-        st.image(result_rgb, caption="SignCodec Semantic Split-Screen Output", use_container_width=True)
+        st.warning(f"WebRTC notice: {e}")
 
 st.markdown("---")
 st.markdown("*GitHub Repository: [github.com/Tanuj-Bhatt/SignCodec](https://github.com/Tanuj-Bhatt/SignCodec)*")
