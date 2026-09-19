@@ -216,12 +216,23 @@ st.caption("Transmitting Sign Language over 252-Byte UDP Packets and 126-Byte Of
 tab1, tab2 = st.tabs(["📸 Browser Camera (Instant & 100% Reliable)", "📹 WebRTC Stream (Experimental)"])
 
 with tab1:
-    st.write("Your browser's native camera opens directly below without any network or firewall blocks:")
-    col_cam, col_upload = st.columns(2)
+    st.markdown("### 📸 Live Browser Camera & Landmark Encoder")
+    st.info(
+        "💡 **Instant & Firewall-Proof:** This uses your browser's direct HTML5 camera feed over secure HTTPS. "
+        "It connects directly without any cloud firewall or WebRTC UDP blocking."
+    )
+
+    col_cam, col_upload = st.columns([1.2, 1])
     with col_cam:
+        st.markdown("**1. Capture from Webcam:**")
         photo = st.camera_input("Hold up an ASL sign to your camera")
     with col_upload:
-        uploaded_file = st.file_uploader("Or upload an image file", type=["jpg", "jpeg", "png"])
+        st.markdown("**2. Or Upload an Image:**")
+        uploaded_file = st.file_uploader("Select a photo of an ASL hand sign", type=["jpg", "jpeg", "png"])
+        st.markdown(
+            "> **Tip for testing:** Try common ASL signs like **'L'** (index + thumb up), **'V'** (peace sign), "
+            "**'B'** (flat hand with thumb tucked), **'Y'** (thumb and pinky out), or **'5'** (open palm)."
+        )
 
     img_source = photo or uploaded_file
     if img_source is not None:
@@ -239,6 +250,7 @@ with tab1:
             result_canvas = process_frame(img_bgr, static_state)
 
         result_rgb = cv2.cvtColor(result_canvas, cv2.COLOR_BGR2RGB)
+        st.markdown("### 📊 Semantic Codec Output (Live Split-Screen HUD)")
         st.image(result_rgb, caption="SignCodec Semantic Split-Screen Output", use_container_width=True)
 
 with tab2:
